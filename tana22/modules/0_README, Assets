@@ -1,0 +1,24 @@
+To access the assets used in the EarthEngine code acces the specific folders in the library via the Link and import them
+-->access to the relevant assets in the directory ee-cjoseph. [18.10.2022]
+
+The scripts can be accessed in the same folder as this file as .txt files, or 
+in the following GitHub repo folder: https://github.com/CarlJosephh/GEE-Tana2/tree/main/tana22/modules
+
+
+Road Datasets:
+https://code.earthengine.google.com/?asset=projects/ee-cjoseph/assets/Roads
+
+Training Datasets:
+https://code.earthengine.google.com/?asset=projects/ee-cjoseph/assets/Training_Datasets_sampled
+
+Previous versions Training Data & incorporation of results from interviews
+https://code.earthengine.google.com/?asset=projects/ee-cjoseph/assets/training_data
+
+Greater Antananarivo:
+https://code.earthengine.google.com/?asset=users/cjoseph/Greater_Tana
+
+Study area:
+https://code.earthengine.google.com/?asset=projects/ee-cjoseph/assets/viable_watershed
+
+Validated Backfills
+https://code.earthengine.google.com/?asset=projects/ee-cjoseph/assets/Backfill_Validation
