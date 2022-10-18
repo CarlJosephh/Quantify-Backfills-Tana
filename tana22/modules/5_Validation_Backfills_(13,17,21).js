@@ -68,6 +68,7 @@ var BF21falsepos = bf21.filter(ee.Filter.eq('LC', 20)).filter(ee.Filter.eq('clas
   var testAccuracy21 = bf21.errorMatrix('LC', 'classification');
   print('Validation error matrix BF21: ', testAccuracy21);
   print('producers Accuracy BF21: ', testAccuracy21.producersAccuracy());
+  print('consacc', testAccuracy21.consumersAccuracy())
   //print('Validation overall accuracy F1: ', testAccuracy.accuracy());  //print('Validation overall accuracy F1: ', testAccuracy.accuracy());
   
 var list = testAccuracy21.array().toList()

@@ -106,49 +106,55 @@ function LogregBds(image){
     var BFB = oldImg.eq(0).rename('prevyrBFDist')
   
     //calculate a dstance kernel to previous year BFs
-    var pyBFdist = BFB.distance(ee.Kernel.euclidean({radius: 3000, units: 'meters'})).unmask(-9999)
+    var pyBFdist = BFB.distance(ee.Kernel.euclidean({radius: 7500, units: 'meters'})).unmask(-9999)
   
   //previous year urban distance band
     //rename previous year band
     var B_UB = oldImg.eq(1).rename('prevyrB_UDist')
   
     //calculate a dstance kernel to previous year pixels
-    var pyB_Udist = B_UB.distance(ee.Kernel.euclidean({radius: 3000, units: 'meters'})).unmask(-9999)
+    var pyB_Udist = B_UB.distance(ee.Kernel.euclidean({radius: 7500, units: 'meters'})).unmask(-9999)
   
   //previous year industrial distance band
     //rename previous year band
     var IndB = oldImg.eq(2).rename('prevyrIndDist')
   
     //calculate a dstance kernel to previous year pixels
-    var pyInddist = IndB.distance(ee.Kernel.euclidean({radius: 3000, units: 'meters'})).unmask(-9999)
+    var pyInddist = IndB.distance(ee.Kernel.euclidean({radius: 7500, units: 'meters'})).unmask(-9999)
     
    //previous year Waterbodies distance band
     //rename previous year band
     var WatB = oldImg.eq(5).rename('prevyrWatDist')
   
     //calculate a dstance kernel to previous year pixels
-    var pyWatdist = WatB.distance(ee.Kernel.euclidean({radius: 3000, units: 'meters'})).unmask(-9999)
+    var pyWatdist = WatB.distance(ee.Kernel.euclidean({radius: 7500, units: 'meters'})).unmask(-9999)
     
   //previous year Wetland distance band
     //rename previous year band
     var WetB = oldImg.eq(6).rename('prevyrWetDist')
   
     //calculate a dstance kernel to previous year pixels
-    var pyWetdist = WetB.distance(ee.Kernel.euclidean({radius: 3000, units: 'meters'})).unmask(-9999)
+    var pyWetdist = WetB.distance(ee.Kernel.euclidean({radius: 7500, units: 'meters'})).unmask(-9999)
     
   //previous year ricefield distance band
     //rename previous year band
     var RiceB = oldImg.eq(7).rename('prevyrRiceDist')
   
     //calculate a dstance kernel to previous year pixels
-    var pyRicedist = RiceB.distance(ee.Kernel.euclidean({radius: 3000, units: 'meters'})).unmask(-9999)
+    var pyRicedist = RiceB.distance(ee.Kernel.euclidean({radius: 7500, units: 'meters'})).unmask(-9999)
     
   //previous year watercress field distance band
     //rename previous year band
     var WacreB = oldImg.eq(8).rename('prevyrWacreDist')
   
     //calculate a dstance kernel to previous year Industrial pixels
-    var pyWacredist = WacreB.distance(ee.Kernel.euclidean({radius: 3000, units: 'meters'})).unmask(-9999)
+    var pyWacredist = WacreB.distance(ee.Kernel.euclidean({radius: 7500, units: 'meters'})).unmask(-9999)
+    
+  //previous year distance to Vegetable crop
+    var VegetB = oldImg.eq(9).rename('prevyrVegetDist')
+    
+    //calculate the distance kernel
+    var pyVegetdist = VegetB.distance(ee.Kernel.euclidean({radius: 7500, units: 'meters'})).unmask(-9999)
     
   //current year urban distance
     //rename current year band
@@ -167,18 +173,18 @@ function LogregBds(image){
   //impervious since the previous year (Gong et al. 2020)
     var pyimpervious = ee.Image(impervious.gt(ee.Number(2020).subtract(ee.Number(id)))).unmask(0).rename('prevyrImperv')
     
-    var pyimpervdist = pyimpervious.distance(ee.Kernel.euclidean({radius: 3000, units: 'meters'})).unmask(-9999)
+    var pyimpervdist = pyimpervious.distance(ee.Kernel.euclidean({radius: 7500, units: 'meters'})).unmask(-9999)
    
   //OSM road distance, primary and secondary  
     //unmask road raster and rename band                                      
     var RoadD = roadcollection.filter(ee.Filter.eq('system:id', id)).first().unmask(-9999).neq(-9999).rename('RoadDist')
     //calculate a distance kernel to  primary and secondary roads(OSM)
-    var Roadist = RoadD.distance(ee.Kernel.euclidean({radius: 3000, units: 'meters'})).unmask(-9999)
+    var Roadist = RoadD.distance(ee.Kernel.euclidean({radius: 7500, units: 'meters'})).unmask(-9999)
   
   //OSM primary secondary and tertiary roads (only for 2022)
   var pst_22 = roads_pst_22_img.unmask(-9999).neq(-9999).rename('RoadDist_pst_22')
   
-  var pstRoadist_22 = pst_22.distance(ee.Kernel.euclidean({radius: 3000, units: 'meters'})).unmask(-9999)
+  var pstRoadist_22 = pst_22.distance(ee.Kernel.euclidean({radius: 7500, units: 'meters'})).unmask(-9999)
   
   //add the bands: current year image (backfill increment or classification), previous year classification
   var bdImg = pyBFdist.addBands([ image,//.unmask(-9999)
@@ -195,10 +201,11 @@ function LogregBds(image){
                                   ee.Image(Classi.filter(ee.Filter.eq('system:id', id.subtract(1).format())).first()).rename('prevYearClassi'),//.unmask(-9999)
                                   elevation.select('elevation'), //.unmask(-9999)
                                   slope.select('slope'),//.unmask(-9999)
-                                  pyimpervdist
+                                  pyimpervdist,
+                                  pyVegetdist
                                   ])
   
-  var bdImgclip = bdImg.clip(GT)
+  var bdImgclip = bdImg.clip(viable)
   
   return bdImgclip.set('system:id', id)
 }
@@ -211,8 +218,8 @@ print(incrementDist, 'incrementDist')
 //Map.addLayer(incrementDist.first(), {bands: ['prevYearClassi'], min:0, max:13, palette:['FF4C33', 'F2E819']}, 'classi')
 //Map.addLayer(incrementDist.first(), {bands: ['backfill'], min:0, max:1, palette:['FF4C33']}, 'backfills')
 //Map.addLayer(ee.Image(incrementDist.first()), {bands: ['RoadDist_2022'], min:0, max:100, palette:['FF4C33', 'F2E819']}, 'RoadDist_2022')
-Map.addLayer(ee.Image(incrementDist.filter(ee.Filter.eq('system:id', 2016)).first()), {bands: ['RoadDist_pst_22'], min:0, max:100, palette:['FF4C33', 'F2E819']}, 'RoadDist_pst_22 2016')
-Map.addLayer(ee.Image(incrementDist.filter(ee.Filter.eq('system:id', 2022)).first()), {bands: ['RoadDist_pst_22'], min:0, max:100, palette:['FF4C33', 'F2E819']}, 'RoadDist_pst_22 2022')
+Map.addLayer(ee.Image(incrementDist.filter(ee.Filter.eq('system:id', 2016)).first()), {bands: ['prevyrB_UDist'], min:0, max:100, palette:['FF4C33', 'F2E819']}, 'prevyrImperv 2016')
+Map.addLayer(ee.Image(incrementDist.filter(ee.Filter.eq('system:id', 2022)).first()), {bands: ['prevyrB_UDist'], min:0, max:100, palette:['FF4C33', 'F2E819']}, 'prevyrImperv 2022')
 Map.addLayer(ee.Image(incrementDist.first()), {bands: ['prevyrImperv'], min:0, max:100, palette:['FF4C33', 'F2E819']}, 'prevyrImperv', false)
 Map.addLayer(viable, '','viable' , false)
 
@@ -259,7 +266,8 @@ Export.table.toDrive({collection: BFincrementDist,
                                     'prevyrWacreDist',
                                     /*, 'curryrB_UDist', 'curryrIndDist'*/ 
                                     'prevYearClassi', 
-                                    'prevyrImperv'])
+                                    'prevyrImperv',
+                                    'prevyrVegetDist'])
                         
 })
 
@@ -291,7 +299,8 @@ Export.table.toDrive({collection: ctrlData,
                                   'prevyrWacreDist',
                                   /*, 'curryrB_UDist', 'curryrIndDist'*/ 
                                   'prevYearClassi', 
-                                  'prevyrImperv'])
+                                  'prevyrImperv',
+                                  'prevyrVegetDist'])
 })
 
 

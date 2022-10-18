@@ -128,7 +128,8 @@ var watershed =
           [47.45400502115174, -18.994888171355193],
           [47.453618783049954, -19.006614945216594]]]);
 /***** End of imports. If edited, may not auto-convert in the playground. *****/
-//import boundary layer Greater Tana (Dupuy et al. 2020)
+
+
 var GT = ee.FeatureCollection('users/cjoseph/Greater_Tana');
 GT = GT.geometry()
 //set Map center to ROI
@@ -241,123 +242,25 @@ var cloudfreeImage = withCloudiness.filter(ee.Filter.lte('cloud', 25));//'cloud'
 
 //Load Images
 //for 06 an 05 2019, 2017 and 2016 have oo high CC, 17 and 16 little better in July but still problematic
-var Landsat22 = cloudfreeImage.filterDate('2021-10-01', '2022-05-01').median().set('system:id', '2022')//ee.String(cloudfreeImage.filterDate('2021-10-01', '2022-05-01').first().get('system:id')).slice(-8))
-var Landsat21 = cloudfreeImage.filterDate('2020-10-01', '2021-05-01').median().set('system:id', '2021') //ee.String(cloudfreeImage.filterDate('2020-10-01', '2021-05-01').first().get('system:id')).slice(-8)) //ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20210530');//(")may2021
-var Landsat20 = cloudfreeImage.filterDate('2019-10-01', '2020-05-01').median().set('system:id', '2020') //ee.String(cloudfreeImage.filterDate('2019-10-01', '2020-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20200527');//(")May 2020 (LC08_L1TP_159073_20200628_20200708_01_T1 ; LC08_L1TP_159073_20200714_20200722_01_T1)
-var Landsat19 = cloudfreeImage.filterDate('2018-10-01', '2019-05-01').median().set('system:id', '2019') //ee.String(cloudfreeImage.filterDate('2018-10-01', '2019-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20190610');//(")!!! June 2019 ,LC08_159073_20190610, <--highCC
-var Landsat18 = cloudfreeImage.filterDate('2017-10-01', '2018-05-01').median().set('system:id', '2018') //ee.String(cloudfreeImage.filterDate('2017-10-01', '2018-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20180506');//(")May 2018 (LC08_L1TP_159073_20180607_20180615_01_T1 ; LC08_L1TP_159073_20180623_20180703_01_T1)
+var Landsat22 = cloudfreeImage.filterDate('2021-10-01', '2022-05-01')//.median().set('system:id', '2022')//ee.String(cloudfreeImage.filterDate('2021-10-01', '2022-05-01').first().get('system:id')).slice(-8))
+var Landsat21 = cloudfreeImage.filterDate('2020-10-01', '2021-05-01')//.median().set('system:id', '2021') //ee.String(cloudfreeImage.filterDate('2020-10-01', '2021-05-01').first().get('system:id')).slice(-8)) //ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20210530');//(")may2021
+var Landsat20 = cloudfreeImage.filterDate('2019-10-01', '2020-05-01')//.median().set('system:id', '2020') //ee.String(cloudfreeImage.filterDate('2019-10-01', '2020-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20200527');//(")May 2020 (LC08_L1TP_159073_20200628_20200708_01_T1 ; LC08_L1TP_159073_20200714_20200722_01_T1)
+var Landsat19 = cloudfreeImage.filterDate('2018-10-01', '2019-05-01')//.median().set('system:id', '2019') //ee.String(cloudfreeImage.filterDate('2018-10-01', '2019-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20190610');//(")!!! June 2019 ,LC08_159073_20190610, <--highCC
+var Landsat18 = cloudfreeImage.filterDate('2017-10-01', '2018-05-01')//.median().set('system:id', '2018') //ee.String(cloudfreeImage.filterDate('2017-10-01', '2018-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20180506');//(")May 2018 (LC08_L1TP_159073_20180607_20180615_01_T1 ; LC08_L1TP_159073_20180623_20180703_01_T1)
 var Landsat17Collection = cloudfreeImage.filterDate('2016-10-01', '2017-05-01')
-var Landsat17 = cloudfreeImage.filterDate('2016-10-01', '2017-05-01').median().set('system:id', '2017') //ee.String(cloudfreeImage.filterDate('2016-10-01', '2017-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20170620');//('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20170706')!!! LC08_159073_20170620<-- highCC
-var Landsat16 = cloudfreeImage.filterDate('2015-10-01', '2016-05-01').median().set('system:id', '2016') //ee.String(cloudfreeImage.filterDate('2015-10-01', '2016-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20160617');//('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20160719')July 2016
-var Landsat15 = cloudfreeImage.filterDate('2014-10-01', '2015-05-01').median().set('system:id', '2015') //ee.String(cloudfreeImage.filterDate('2014-10-01', '2015-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20150615');//(")June 2015
-var Landsat14 = cloudfreeImage.filterDate('2013-10-01', '2014-05-01').median().set('system:id', '2014') //ee.String(cloudfreeImage.filterDate('2013-10-01', '2014-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20140527');//(")may2014
+var Landsat17 = cloudfreeImage.filterDate('2016-10-01', '2017-05-01')//.median().set('system:id', '2017') //ee.String(cloudfreeImage.filterDate('2016-10-01', '2017-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20170620');//('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20170706')!!! LC08_159073_20170620<-- highCC
+var Landsat16 = cloudfreeImage.filterDate('2015-10-01', '2016-05-01')//.median().set('system:id', '2016') //ee.String(cloudfreeImage.filterDate('2015-10-01', '2016-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20160617');//('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20160719')July 2016
+var Landsat15 = cloudfreeImage.filterDate('2014-10-01', '2015-05-01')//.median().set('system:id', '2015') //ee.String(cloudfreeImage.filterDate('2014-10-01', '2015-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20150615');//(")June 2015
+var Landsat14 = cloudfreeImage.filterDate('2013-10-01', '2014-05-01')//.median().set('system:id', '2014') //ee.String(cloudfreeImage.filterDate('2013-10-01', '2014-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20140527');//(")may2014
 var Landsat13 = ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20130609')/*cloudfreeImage.filterDate('2012-10-01', '2013-05-01').median()*/.set('system:id', '2013') //ee.String(cloudfreeImage.filterDate('2012-10-01', '2013-05-01').first().get('system:id')).slice(-8))//ee.Image('LANDSAT/LC08/C02/T1_TOA/LC08_159073_20130609');//(")may2014
 
-var LS8export = ee.ImageCollection.fromImages([
-  Landsat22,
-  Landsat21,
-  Landsat20,
-  Landsat19,
-  Landsat18,
-  Landsat17,
-  Landsat16,
-  Landsat15,
-  Landsat14,
-  Landsat13
-]);
-print('LS8export: ', LS8export);
-
-//___________________________________________________________________________________________________________
-//IMAGE PREPROCESSING, Band calculations and clipping to region of interest
-//load DEM
-var elevation = ee.Image('USGS/SRTMGL1_003').clip(viablegeo).select('elevation');
-var slope = ee.Terrain.slope(elevation)
-//function for clipping and calculating complex and simple band ratios
-function process(image){
-  //clipping the image
-  var image = image.clip(viablegeo);
-  //band names
-  //!!!PAY ATTENTION TO USE THE RIGHT BAND VALUES WHEN USING DATA FROM DIFFERENT LANDSAT MISSIONS!!!
-  var bn = {
-      'BLUE':   image.select('B2'),
-      'GREEN':  image.select('B3'),
-      'RED':    image.select('B4'),
-      'NIR':    image.select('B5'),
-      'SWIR1':  image.select('B6'),
-      'SWIR2':  image.select('B7')}
-  //complex band calculations
-  var BSI = image.expression(//Bare Soil Index Diek et al. 2017
-    '((RED + SWIR2) - (NIR + BLUE)) / ((RED + SWIR2) + (NIR + BLUE))', bn) //Barest Pixel Composite for Agricultural Areas Using Landsat Time Series
-    .rename('BSI');
-  var NDVI = image.expression(//Normalised Difference Vegetation Index
-    '(NIR - RED)/(NIR + RED)', bn)
-    .rename('NDVI');
-  var SCI = image.expression(//Soil Composition Index (SCI)
-    '(SWIR1 - NIR)/(SWIR1 + NIR)', bn)
-    .rename('SCI');
-  var SBL = image.expression(//Soil Background Line (SBL)
-    'NIR - (2.4*RED)', bn)
-    .rename('SBL');
-  var NDBI =image.expression(//Normalized Difference Built up Index :Zha, Y., J. Gao, and S. Ni. "Use of Normalized Difference Built-Up Index in Automatically Mapping Urban Areas from TM Imagery." International Journal of Remote Sensing 24, no. 3 (2003): 583-594
-    '(SWIR1 - NIR) / (SWIR1 + NIR)', bn)
-    .rename('NDBI')
-  var NDWI = image.expression(//NDWI = (Band 3 – Band 5)/(Band 3 + Band 5)
-    '(GREEN - NIR) / (GREEN + NIR)', bn)
-    .rename('NDWI')
-  //simple single band calculation
-  //(Landsat data Ratios 1 - 3 from: May 2015 DOI:10.5194/isprsarchives-XL-7-W3-897-2015, Mwaniki et al. 2015)
-  var Br4_3 = image.expression(//Mwaniki et al. 2015
-    'RED / GREEN',bn)
-    .rename('Br4_3')
-  var Br6_2 = image.expression(//Mwaniki et al. 2015
-    'SWIR1 / BLUE',bn)
-    .rename('Br6_2') 
-  var Br7_3 = image.expression(//Mwaniki et al. 2015 //change RED to Green
-    'SWIR2 / RED',bn)
-    .rename('Br7_3')
-  var Br5_7 = image.expression(//Thi et al. 2019
-    'NIR / SWIR2',bn)
-    .rename('Br5_7')
-  var Br5_4_3 = image.expression(
-    '(NIR / RED / GREEN)', bn)
-    .rename('Br5_4_3')
-    //new indices use or not? 
-   var RI = image.expression(//Redness index
-    '(RED * RED) / (GREEN * GREEN)', bn)
-    .rename('RI') 
-  var CI = image.expression(//Colour index
-    '(RED - GREEN) / (RED + GREEN)', bn)
-    .rename('CI') 
-  var ARVI = image.expression(//Atmospherically Resistant Vegetation Index
-    '(NIR - (2 * RED) + BLUE) / (NIR + (2 * RED) + BLUE)', bn)
-    .rename('ARVI') 
- 
-  
- //Add calculated ratios and indices to the image as bands
-  var newBands = ee.Image([BSI, NDVI, SCI, SBL, NDBI, NDWI, Br4_3, Br6_2, Br7_3, Br5_4_3, elevation, slope, RI, CI, ARVI, Br5_7]);
-  image = image.addBands(newBands);  
-  return image;
-}
-
-//execute function on image collection
-var Process = LS8export.map(process);
-//print(Process, 'processed');
-
-
-var ProcessList = Process.toList(Process.size());
-//print(ProcessList, 'ProcessList')
-
-//print(Landsat17)
-//module exports
-exports.LS8export = LS8export
-exports.Process = Process
-exports.ProcessList = ProcessList
-exports.viablegeo = viablegeo
-exports.GT = GT
-exports.Landsat13 = Landsat13
-exports.Landsat17 = Landsat17
-exports.Landsat21 = Landsat21
-exports.Landsat17Collection = Landsat17Collection
-exports.process = process
-exports.elevation = elevation
-exports.Slope = slope
+print(Landsat13, 'Landsat13')
+print(Landsat14, 'Landsat14')
+print(Landsat15, 'Landsat15')
+print(Landsat16, 'Landsat16')
+print(Landsat17, 'Landsat17')
+print(Landsat18, 'Landsat18')
+print(Landsat19, 'Landsat19')
+print(Landsat20, 'Landsat20')
+print(Landsat21, 'Landsat21')
+print(Landsat22, 'Landsat22')

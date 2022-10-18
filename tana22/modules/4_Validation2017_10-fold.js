@@ -1,13 +1,13 @@
 //path to models
 var ImageClassification = require('users/cjoseph/tana22:modules/3_Classification_BFArea.js');
 
+
 //import model elements
 var NumberOfTrees = ImageClassification.NumberOfTrees
 var seedRF = ImageClassification.seedRF
 var bands = ImageClassification.bands
 var trainingCol = ImageClassification.trainingCol
 var TD_as_classi = ImageClassification.trainingData
-
 
 //load training datasets (already sampled)
 var medianTDResizeBF = ee.FeatureCollection('projects/ee-cjoseph/assets/Training_Datasets_sampled/RandomizedTrainingDataResizeBF')

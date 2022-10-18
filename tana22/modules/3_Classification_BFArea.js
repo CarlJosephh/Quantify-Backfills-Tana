@@ -23,16 +23,18 @@ print(dupuy_classes17, 'dupuy_classes17')
 //var tvDataResize = ee.FeatureCollection('projects/ee-cjoseph/assets/validation_data/RandomizedTrainingDataResizeBF')
 var medianTDResizeBF = ee.FeatureCollection('projects/ee-cjoseph/assets/Training_Datasets_sampled/RandomizedTrainingDataResizeBF')
 var MedianTD = ee.FeatureCollection('projects/ee-cjoseph/assets/Training_Datasets_sampled/allTrainingData')
-var allimg17 = ee.FeatureCollection('projects/ee-cjoseph/assets/Training_Datasets_sampled/alltraining_allImg17')
+/*var allimg17 = ee.FeatureCollection('projects/ee-cjoseph/assets/Training_Datasets_sampled/alltraining_allImg17')
 var allimg17ResizeBF = ee.FeatureCollection('projects/ee-cjoseph/assets/Training_Datasets_sampled/training_allImg17ResizeBF')
+var medianTD_GT = ee.FeatureCollection('projects/ee-cjoseph/assets/Training_Datasets_sampled/allTraningData_GT')
+var medianTDResizeBF_GT = ee.FeatureCollection('projects/ee-cjoseph/assets/Training_Datasets_sampled/RandomizedTrainingDataResizeBF_GT')*/
 
-var trainingData = medianTDResizeBF// dupuy_classes17
+var trainingData = medianTDResizeBF// dupuy_classes17 medianTD_GT//
 var trainingCol = 'LC'
 
 var StartYear = 2013
 var EndYear = 2022
 
-var YearOfInterest = 2017
+var YearOfInterest = 2016
 
 var NumberOfTrees = 100
 var seedRF = 10
@@ -165,24 +167,38 @@ function BFincrement(image){
 //and sort by system id/ Year
 var maskRast = Backfill.filter(ee.Filter.gt('system:id', ee.Number(StartYear).format())).map(BFincrement).sort('system:id')
 print(maskRast, 'maskRast')
-
+var BFincrList = maskRast.toList(maskRast.size())
 //convert to list of images
 var toreduce = maskRast.toList(maskRast.size());
 //_ _ _ _ _ _ _ _ _ _ _ _ _
 //alternative area calculation. is it more consistent?
-var pixelCountareas = toreduce.map(function cntPxl(image){var redI = ee.Image(image).reduceRegion({reducer: ee.Reducer.sum(), scale:30, geometry: viablegeo})
+/*var pixelCountareas = toreduce.map(function cntPxl(image){var redI = ee.Image(image).reduceRegion({reducer: ee.Reducer.sum(), scale:30, geometry: viablegeo})
                                                           var count = redI.getNumber('backfill').multiply(900)
                                                           return count
 })
 
 print(pixelCountareas, 'pixelCountareas')
-var pixelCountareasIncrKm = ee.Array(pixelCountareas).multiply(0.000001)
+var pixelCountareasIncrKm = ee.Array(pixelCountareas).multiply(0.000001)*/
 //_ _ _ _ _  _ _ _ _ _ _ _ 
+//even another way to calculate area using raster function
+var bandArea = toreduce.map(function SingleClass(image){
+  var areaImage = ee.Image(image).multiply(ee.Image.pixelArea())
+  var area = areaImage.reduceRegion({
+    reducer: ee.Reducer.sum(),
+    geometry: viablegeo,
+    scale: 30
+  })
+  var bfAreaKm2 = ee.Number(
+    area.get('backfill'))//.divide(1e6)
+  return(bfAreaKm2)
+})
+print(bandArea, 'bandArea')
+//-----------------------------
 //function to convert yearly bf increase to vector and calculate the area in m2 //!!!why do the calculated values vary between different runs???
-function area(image){
+/*function area(image){
   var geom = ee.Image(image).reduceToVectors({reducer: ee.Reducer.countEvery(),
                                               geometryType: 'polygon',
-                                              /*crs: ee.Image(image).projection(),*/
+                                              //crs: ee.Image(image).projection(),
                                               scale: 30, 
                                               geometry: viablegeo, 
                                               labelProperty: null , 
@@ -197,7 +213,7 @@ function area(image){
 }
 //run area calculation function and reverse the order ofthe list
 var areaIncrM = toreduce.map(area)
-print(areaIncrM, 'areaIncr')
+print(areaIncrM, 'areaIncr')*/
 
 /*Map.addLayer(ee.Image(toreduce.get(1)),{min:0, max:1, palette:['FF4C33']}, 'backfills')
 Map.addLayer(ee.Image(toreduce.get(1)).reduceToVectors({reducer: ee.Reducer.countEvery(),
@@ -213,7 +229,7 @@ Map.addLayer(ee.Image(toreduce.get(1)).reduceToVectors({reducer: ee.Reducer.coun
    .geometry(),{}, 'poly')*/
 
 //create an array from area values and convert tm2 to km2
-var areaIncrKm = ee.Array(areaIncrM).multiply(0.000001)
+var areaIncrKm = ee.Array(bandArea).multiply(0.000001)//areaIncrM
 
 //create yearly steps for the year before, since backfill takes place in the dry season before the rainy season, which the image is taken from (e.g. RS 2014 image shows backfills during 2013)
 var years = ee.List.sequence(StartYear+1, EndYear, 1);  // // [0,2,4,6,8,10]
@@ -260,7 +276,8 @@ Export.table.toDrive({
   //Export increment Layers as feature collection SHP
 function vektor(image){
   var id = image.get('system:id')
-  var vct = image.reduceToVectors({scale: 30, 
+  
+  var reg = image.reduceToVectors({ scale: 30, 
                                     geometry: viablegeo, 
                                     labelProperty: 'backfill' , 
                                     bestEffort: true,
@@ -269,7 +286,7 @@ function vektor(image){
   })
   .geometry()
   
-  vct = ee.Feature/*Collection*/(vct, {name: id})
+  var vct = ee.Feature/*Collection*/(reg, {name: id})
   
   return vct
 }
@@ -289,6 +306,16 @@ Export.table.toDrive({
   folder: 'GEE',
   fileFormat: 'SHP'
 });
+
+var projection = maskRast.first().select('backfill').projection().getInfo()
+print(projection, 'maskRast')
+
+/*var ArRast = maskRast.map(function fastarea(image){
+  var id = image.get('system:id')
+  var arI = image.multiply(ee.Image.pixelArea())
+  return(arI).set('system:id', id)
+})
+print(ArRast, 'arearaster')*/
 //___________________________________________________________________________________
 //module exports
 exports.StartYear = StartYear
@@ -357,8 +384,20 @@ Map.addLayer(ee.Image(ClassiList.get(n)),{min:0, max:13, palette:['FF4C33',    /
 Map.addLayer(ee.Image(BackfillList.get(n)),{min:0, max:1, palette:['FF4C33']}, 'backfills', false);
 //(image, description, assetId, pyramidingPolicy, dimensions, region, scale, crs, crsTransform, maxPixels, shardSize
 //print(ee.Image(BackfillList.get(8)))
+Map.addLayer(ee.Image(BFincrList.get(ee.Number(8).subtract(n))),{min:0, max:1, palette:['FF4C33']}, 'backfill increase', false);
 
 Export.image.toDrive({image: ee.Image(ClassiList.get(5)).unmask(-999), folder: 'GEE', region: viablegeo, description: 'classifiedimg2017', scale: 30, skipEmptyTiles: true, fileFormat: 'GeoTIFF' })
+Export.image.toDrive({image: ee.Image(ClassiList.get(1)).unmask(-999), folder: 'GEE', region: viablegeo, description: 'classifiedimg2021', scale: 30, skipEmptyTiles: true, fileFormat: 'GeoTIFF' })
+Export.image.toDrive({image: ee.Image(ClassiList.get(9)).unmask(-999), folder: 'GEE', region: viablegeo, description: 'classifiedimg2013', scale: 30, skipEmptyTiles: true, fileFormat: 'GeoTIFF' })
+Export.image.toDrive({image: ee.Image(ClassiList.get(6)).unmask(-999), folder: 'GEE', region: viablegeo, description: 'classifiedimg2016', scale: 30, skipEmptyTiles: true, fileFormat: 'GeoTIFF' })
+
+Export.image.toDrive({image: ee.Image(ClassiList.get(0)).unmask(-999), folder: 'GEE', region: viablegeo, description: 'classifiedimg2022', scale: 30, skipEmptyTiles: true, fileFormat: 'GeoTIFF' })
+Export.image.toDrive({image: ee.Image(ClassiList.get(2)).unmask(-999), folder: 'GEE', region: viablegeo, description: 'classifiedimg2020', scale: 30, skipEmptyTiles: true, fileFormat: 'GeoTIFF' })
+Export.image.toDrive({image: ee.Image(ClassiList.get(3)).unmask(-999), folder: 'GEE', region: viablegeo, description: 'classifiedimg2019', scale: 30, skipEmptyTiles: true, fileFormat: 'GeoTIFF' })
+Export.image.toDrive({image: ee.Image(ClassiList.get(4)).unmask(-999), folder: 'GEE', region: viablegeo, description: 'classifiedimg2018', scale: 30, skipEmptyTiles: true, fileFormat: 'GeoTIFF' })
+Export.image.toDrive({image: ee.Image(ClassiList.get(7)).unmask(-999), folder: 'GEE', region: viablegeo, description: 'classifiedimg2015', scale: 30, skipEmptyTiles: true, fileFormat: 'GeoTIFF' })
+Export.image.toDrive({image: ee.Image(ClassiList.get(8)).unmask(-999), folder: 'GEE', region: viablegeo, description: 'classifiedimg2014', scale: 30, skipEmptyTiles: true, fileFormat: 'GeoTIFF' })
+
 /*Export.image.toAsset({image: ee.Image(BackfillList.get(4)), region: GT, description: 'BF2017', assetId: 'm17_BF2017', scale: 30})
 Export.image.toAsset({image: ee.Image(BackfillList.get(0)), region: GT, description: 'BF2021', assetId: 'm17_BF2021', scale: 30})*/
 
